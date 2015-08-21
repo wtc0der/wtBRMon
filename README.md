@@ -14,4 +14,4 @@ A OpenWRT realtime per-IP bandwidth Monitor
 ## Launch
  - /etc/init.d/wtBRMon enable
  - /etc/init.d/wtBRMon start
- - Open web browser on http://<ROUTER-IP>/wtBRMon
+ - Open web browser on http://[ROUTER-IP]/wtBRMon
