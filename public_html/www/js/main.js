@@ -257,7 +257,7 @@ $(document).ready(function () {
                 // On ajoute l'enregistrement dans la tableau de la datatable
                     var hostname = datas_hostnames[0][val.IP];
                     if (hostname == undefined) hostname = "--";
-                    console.log(hostname);
+                    //console.log(hostname);
                     curr_bw.push([hostname, val.IP, dl, up, pc_dl, pc_up, convertByte(val.DL), convertByte(val.UP)]);
                 
                 // Calcul des totaux
