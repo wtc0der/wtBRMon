@@ -6,6 +6,7 @@ $(document).ready(function () {
     
     var datas_qos = {};
     var datas_hosts = {};
+    var datas_hostnames = {};
     var datas_bw = {};
 
     var max_DL = 0;
@@ -181,22 +182,25 @@ $(document).ready(function () {
                 datas_qos = data.data.QOS;
                 datas_hosts = data.data.arp;
                 datas_bw = data.data.bandwidth;
+                datas_hostnames = data.data.leases;
+                //console.log(datas_hostnames["192.168.1.11"]);
             }
         });
 
     }
 
     function readHosts() {
+        
         $.each(datas_hosts, function (key, val) {
             if (bw.hasOwnProperty(val.IP)) {
-                bw[val.IP] = {"CON": 0, "DL": 0, "UP": 0, "IP": val.IP, "MAC": val.MAC, "PREV_TIME": bw[val.IP]["CURRENT_TIME"], "CURRENT_TIME": 0, "OLD_DL": bw[val.IP]["DL"], "OLD_UP": bw[val.IP]["UP"]};
+                bw[val.IP] = {"NAME": datas_hostnames[val.IP], "CON": 0, "DL": 0, "UP": 0, "IP": val.IP, "MAC": val.MAC, "PREV_TIME": bw[val.IP]["CURRENT_TIME"], "CURRENT_TIME": 0, "OLD_DL": bw[val.IP]["DL"], "OLD_UP": bw[val.IP]["UP"]};
             } else {
-                bw[val.IP] = {"CON": 0, "DL": 0, "UP": 0, "IP": val.IP, "MAC": val.MAC, "PREV_TIME": 0, "CURRENT_TIME": 0, "OLD_DL": 0, "OLD_UP": 0};
+                bw[val.IP] = {"NAME" : datas_hostnames[val.IP], "CON": 0, "DL": 0, "UP": 0, "IP": val.IP, "MAC": val.MAC, "PREV_TIME": 0, "CURRENT_TIME": 0, "OLD_DL": 0, "OLD_UP": 0};
             }
             myhosts.push(val.IP);
         });
     }
-
+    
     function readQOS() {
         var val = datas_qos[0];
         max_DL = val["QOS_DL"];
@@ -207,9 +211,8 @@ $(document).ready(function () {
         readData();
         readHosts();
         readQOS();
+
         $.each(datas_bw, function (key, val) {
-
-
             var id_host = jQuery.inArray(val.SRC, myhosts);
 
             // Si l'élement existe : contexte DL
@@ -217,7 +220,6 @@ $(document).ready(function () {
                 bw[val.SRC]["CURRENT_TIME"] = val.CURRENT_TIME;
                 bw[val.SRC]["CON"]++;
                 bw[val.SRC]["UP"] += val.BYTE;
-
 
             } else { // Sinon, on vérifie quand même que nous sommes bien dans un contexte de UP
                 id_host = jQuery.inArray(val.DST, myhosts);
@@ -253,62 +255,71 @@ $(document).ready(function () {
                 var pc_up = Math.round(  (( ((val.UP - val.OLD_UP) / (val.CURRENT_TIME - val.PREV_TIME))/1204) / (max_UP / 8) * 100),2) + "%";
                 
                 // On ajoute l'enregistrement dans la tableau de la datatable
-                    curr_bw.push([val.IP, dl, up, pc_dl, pc_up, convertByte(val.DL), convertByte(val.UP)]);
+                    var hostname = datas_hostnames[0][val.IP];
+                    if (hostname == undefined) hostname = "--";
+                    console.log(hostname);
+                    curr_bw.push([hostname, val.IP, dl, up, pc_dl, pc_up, convertByte(val.DL), convertByte(val.UP)]);
                 
                 // Calcul des totaux
-                    total_DL_BW+=   bw_stringToInt(dl);
-                    total_UP_BW+=   bw_stringToInt(up);
-                    total_PC_DL_BW+=Math.round(  (( ((val.DL - val.OLD_DL) / (val.CURRENT_TIME - val.PREV_TIME))/1204) / (max_DL / 8) * 100),2);
-                    total_PC_UP_BW+=Math.round(  (( ((val.UP - val.OLD_UP) / (val.CURRENT_TIME - val.PREV_TIME))/1204) / (max_UP / 8) * 100),2);
-                    total_DL+=      bw_stringToInt(dl);
-                    total_UP+=      bw_stringToInt(dl);
+                    total_DL_BW     +=  bw_stringToInt(dl);
+                    total_UP_BW     +=  bw_stringToInt(up);
+                    total_PC_DL_BW  +=  Math.round(  (( ((val.DL - val.OLD_DL) / (val.CURRENT_TIME - val.PREV_TIME))/1204) / (max_DL / 8) * 100),2);
+                    total_PC_UP_BW  +=  Math.round(  (( ((val.UP - val.OLD_UP) / (val.CURRENT_TIME - val.PREV_TIME))/1204) / (max_UP / 8) * 100),2);
+                    total_DL        +=  bw_stringToInt(dl);
+                    total_UP        +=  bw_stringToInt(dl);
             });
-            
+
             // Mise à jour de la page
                 $("#dl_total_bw").text(convertByte(total_DL_BW)+"/s");
                 $("#up_total_bw").text(convertByte(total_UP_BW)+"/s");
                 
                 $("#pb_bw_dl").width(total_PC_DL_BW + "%");
                 $("#pb_bw_dl").text(total_PC_DL_BW + "%");
+                
+                
                 if (total_PC_DL_BW < val_warning) {
                     $("#pb_bw_dl").removeClass('progress-bar-info');
                     $("#pb_bw_dl").removeClass('progress-bar-warning');
                     $("#pb_bw_dl").removeClass('progress-bar-danger');
                     $("#pb_bw_dl").addClass('progress-bar-info');
+                    
                 } else if (total_PC_DL_BW < val_danger) {
                     $("#pb_bw_dl").removeClass('progress-bar-info');
                     $("#pb_bw_dl").removeClass('progress-bar-warning');
                     $("#pb_bw_dl").removeClass('progress-bar-danger');
                     $("#pb_bw_dl").addClass('progress-bar-warning');
+                    
                 } else {
                     $("#pb_bw_dl").removeClass('progress-bar-info');
                     $("#pb_bw_dl").removeClass('progress-bar-warning');
                     $("#pb_bw_dl").removeClass('progress-bar-danger');
                     $("#pb_bw_dl").addClass('progress-bar-danger');
+                    
                 }
                 
                 $("#pb_bw_up").width(total_PC_UP_BW+ "%");
                 $("#pb_bw_up").text(total_PC_UP_BW + "%");
+                
                 if (total_PC_UP_BW < val_warning) {
                     $("#pb_bw_up").removeClass('progress-bar-info');
                     $("#pb_bw_up").removeClass('progress-bar-warning');
                     $("#pb_bw_up").removeClass('progress-bar-danger');
                     $("#pb_bw_up").addClass('progress-bar-info');
+                    
                 } else if (total_PC_UP_BW < val_danger) {
                     $("#pb_bw_up").removeClass('progress-bar-info');
                     $("#pb_bw_up").removeClass('progress-bar-warning');
                     $("#pb_bw_up").removeClass('progress-bar-danger');
                     $("#pb_bw_up").addClass('progress-bar-warning');
+                    
                 } else {
                     $("#pb_bw_up").removeClass('progress-bar-info');
                     $("#pb_bw_up").removeClass('progress-bar-warning');
                     $("#pb_bw_up").removeClass('progress-bar-danger');
                     $("#pb_bw_up").addClass('progress-bar-danger');
+                    
                 }
-           
-            
-        // Calcul des totaux        
-        
+        //console.log(curr_bw);
         // Mise à jour de la table
             table.clear();
             table.rows.add(curr_bw);
@@ -317,18 +328,19 @@ $(document).ready(function () {
 
     var table = $('#bw_table').DataTable({
         data: curr_bw,
-        "aoColumns": [
-			null,
-			{ "sType": "bandwidth" },
-			{ "sType": "bandwidth" },
-			{ "sType": "pc" },
-			{ "sType": "pc" },
-			{ "sType": "volume" },
-			{ "sType": "volume" }
-		]
+        "aoColumns": 
+        [
+            null,
+            null,
+            { "sType": "bandwidth"  },
+            { "sType": "bandwidth"  },
+            { "sType": "pc"         },
+            { "sType": "pc"         },
+            { "sType": "volume"     },
+            { "sType": "volume"     }
+        ]
     });
     
-    readBw();
+    readBw();  
     setInterval(readBw, 3000);
-
 });

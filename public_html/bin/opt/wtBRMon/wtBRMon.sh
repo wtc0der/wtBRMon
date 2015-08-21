@@ -7,6 +7,7 @@
 
 LAN_IFACE=$(uci get network.lan.ifname)
 LAN_TYPE=$(uci get network.lan.ipaddr | awk -F. ' { print $1"."$2 }')
+LEASES_FILE=/tmp/dhcp.leases
 LOCK_FILE=/tmp/wtBRMon.lock
 TMP_DATA_FILE=/tmp/wtBRMon.data
 WEB_FOLDER=/www
@@ -99,7 +100,25 @@ echo '"bandwidth" : [' >> $TMP_DATA_FILE
 		echo '{"PKT": ' $PKT ', "BYTE": ' $BYTE ', "SRC": "'$SRC'", "DST": "'$DST'", "CURRENT_TIME" : '$CURRENT_TIME', "PREV_TIME" : '$PREV_TIME'}' >> $TMP_DATA_FILE
 	done
 
-	echo '] }}' >> $TMP_DATA_FILE
+	echo '],' >> $TMP_DATA_FILE
+
+echo '"leases" : [{' >> $TMP_DATA_FILE
+
+	CNT=0
+	cat $LEASES_FILE | grep ${LAN_TYPE}| while read ID B IP NAME MAC
+	do
+		if [[ "$CNT" != 0 ]]
+		then
+			echo ',' >> $TMP_DATA_FILE
+		fi
+		CNT=1
+		echo '"'$IP'": "'$NAME'"' >> $TMP_DATA_FILE
+	done
+
+	echo '}]}}' >> $TMP_DATA_FILE
+
+
+
 
   mv -f $TMP_DATA_FILE $WEB_FOLDER/wtBRMon.json
   sleep 1
