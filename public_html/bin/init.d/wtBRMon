@@ -1,0 +1,18 @@
+#!/bin/sh /etc/rc.common
+START=50
+SERVICE_NAME=wtBRMon
+SERVICE_DIRECTORY=/opt/wtBRMon
+SERVICE_STARTUP_SCRIPT=wtBRMon.sh
+SERVICE_SHUTDOWN_SCRIPT=shutdown.sh
+
+start()
+{
+        echo "Starting service '${SERVICE_NAME}'..."
+        ${SERVICE_DIRECTORY}/${SERVICE_STARTUP_SCRIPT}&
+}
+
+stop()
+{
+        echo "Stopping service '${SERVICE_NAME}'..."
+        service_stop {SERVICE_DIRECTORY}/${SERVICE_SHUTDOWN_SCRIPT}
+}
