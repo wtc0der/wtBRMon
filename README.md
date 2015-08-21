@@ -12,6 +12,12 @@ A OpenWRT realtime per-IP bandwidth Monitor
  - chmod +x /opt/wtBRMon/*
 
 ## Launch
+ - **Edit /opt/wtBRMon/wtBRMon.sh and check configuration vars**
  - /etc/init.d/wtBRMon enable
  - /etc/init.d/wtBRMon start
  - Open web browser on http://[ROUTER-IP]/wtBRMon
+
+**Need QOS Uplink and Downlink configured**
+
+
+Tested on : LinkSys WRT1200AC with OpenWrt Chaos Calmer r46584
