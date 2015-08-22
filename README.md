@@ -5,17 +5,14 @@ A OpenWRT realtime per-IP bandwidth Monitor
 ## Installation
  - Clone Git repository
 
- - Copy public_html/bin/init.d/wtBRMon in /etc/init.d/
- - Copy public_html/bin/opt/wtBRMon in /opt/
+ - Copy public_html/cgi-bin/wtBRMon in /[Web Root]/cgi-bin/ i.e. /www/cgi-bin/
  - Copy public_html/www in your web server root folder i.e. /www/wtBRMon/
 
- - chmod +x /etc/init.d/wtBRMon
- - chmod +x /opt/wtBRMon/*
+ - chmod +x /[Web Root]/cgi-bin/wtBRMon
 
 ## Launch
- - **Edit /opt/wtBRMon/wtBRMon.sh and check configuration vars**
- - /etc/init.d/wtBRMon enable
- - /etc/init.d/wtBRMon start
+ - **Edit /[Web Root]/cgi-bin/wtBRMon and check configuration vars**
+ - Open web browser on http://[ROUTER-IP]/cgi-bin/wtBRMon and check if json file is correct (ex: with http://jsonlint.com)
  - Open web browser on http://[ROUTER-IP]/wtBRMon
 
 **Need QOS Uplink and Downlink configured**
