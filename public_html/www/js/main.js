@@ -2,6 +2,7 @@ $(document).ready(function () {
     // Limite couleurs progress bar
         var val_warning = 75;
         var val_danger  = 85;
+        var refresh = 3000;
     
     
     var datas_qos = {};
@@ -175,7 +176,7 @@ $(document).ready(function () {
 
     function readData() {
         $.ajax({
-            url: "/wtBRMon.json",
+            url: "/cgi-bin/wtBRMon",
             async: false,
             dataType: 'json',
             success: function (data) {
@@ -342,5 +343,5 @@ $(document).ready(function () {
     });
     
     readBw();  
-    setInterval(readBw, 3000);
+    setInterval(readBw, refresh);
 });
