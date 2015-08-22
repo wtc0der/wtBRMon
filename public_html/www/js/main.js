@@ -30,8 +30,6 @@ $(document).ready(function () {
         var total_UP_BW     = 0;
         var total_PC_DL_BW  = 0;
         var total_PC_UP_BW  = 0;
-        var total_DL        = 0;
-        var total_UP        = 0;
     
     function bw_stringToInt (str) {
         var x = -1;
@@ -267,12 +265,17 @@ $(document).ready(function () {
                     //console.log(hostname);
                     curr_bw.push([hostname, val.IP, dl, up, pc_dl, pc_up, convertByte(val.DL), convertByte(val.UP)]);
                 
-                // Calcul des totaux
-
-                    // Lissage
-                    if (prefer_average === true) {
-                        total_DL_BW     +=  bw_stringToInt(Math.round((dl+pb_old_bw_dl_val)/2));
-                        total_UP_BW     +=  bw_stringToInt(Math.round((up+pb_old_bw_up_val)/2));
+                // Calcul des totaux                   
+                        total_DL_BW     +=  bw_stringToInt(dl);
+                        total_UP_BW     +=  bw_stringToInt(up);
+                        total_PC_DL_BW  +=  Math.round(  (( ((val.DL - val.OLD_DL) / (val.CURRENT_TIME - val.PREV_TIME))/1204) / (max_DL / 8) * 100));
+                        total_PC_UP_BW  +=  Math.round(  (( ((val.UP - val.OLD_UP) / (val.CURRENT_TIME - val.PREV_TIME))/1204) / (max_UP / 8) * 100));
+            });
+            
+            // Lissage
+                if (prefer_average === true) {
+                        total_DL_BW     =  Math.round((total_DL_BW+pb_old_bw_dl_val) / 2);
+                        total_UP_BW     =  Math.round((total_UP_BW+pb_old_bw_up_val) / 2);
                         
                         total_PC_DL_BW  = Math.round((total_PC_DL_BW + pb_old_bw_dl_pc) / 2); 
                         total_PC_UP_BW  = Math.round((total_PC_UP_BW + pb_old_bw_up_pc) / 2); 
@@ -281,16 +284,8 @@ $(document).ready(function () {
                         pb_old_bw_up_pc     = total_PC_UP_BW;
                         pb_old_bw_dl_val    = total_DL_BW;
                         pb_old_bw_up_val    = total_UP_BW;
-                    } else {
-                        total_DL_BW     +=  bw_stringToInt(dl);
-                        total_UP_BW     +=  bw_stringToInt(up);
-                        total_PC_DL_BW  +=  Math.round(  (( ((val.DL - val.OLD_DL) / (val.CURRENT_TIME - val.PREV_TIME))/1204) / (max_DL / 8) * 100));
-                        total_PC_UP_BW  +=  Math.round(  (( ((val.UP - val.OLD_UP) / (val.CURRENT_TIME - val.PREV_TIME))/1204) / (max_UP / 8) * 100));
-                    }
-                    
-                    total_DL        +=  bw_stringToInt(dl);
-                    total_UP        +=  bw_stringToInt(dl);
-            });
+                } 
+            
 
             // Mise à jour de la page
                 $("#dl_total_bw").text(convertByte(total_DL_BW)+"/s");
