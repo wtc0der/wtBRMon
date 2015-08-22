@@ -2,8 +2,14 @@ $(document).ready(function () {
     // Limite couleurs progress bar
         var val_warning = 75;
         var val_danger  = 85;
-        var refresh = 3000;
-    
+        var refresh = 1000;
+        var prefer_average = true;
+        
+        // Pour le lissage des progress bar
+            var pb_old_bw_dl_pc     = 0;
+            var pb_old_bw_up_pc     = 0;
+            var pb_old_bw_dl_val    = 0;
+            var pb_old_bw_up_val    = 0;
     
     var datas_qos = {};
     var datas_hosts = {};
@@ -266,6 +272,23 @@ $(document).ready(function () {
                     total_UP_BW     +=  bw_stringToInt(up);
                     total_PC_DL_BW  +=  Math.round(  (( ((val.DL - val.OLD_DL) / (val.CURRENT_TIME - val.PREV_TIME))/1204) / (max_DL / 8) * 100),2);
                     total_PC_UP_BW  +=  Math.round(  (( ((val.UP - val.OLD_UP) / (val.CURRENT_TIME - val.PREV_TIME))/1204) / (max_UP / 8) * 100),2);
+                    
+                   
+                    
+                    // Lissage
+                    if (prefer_average === true) {
+                        total_DL_BW     +=  bw_stringToInt(Math.round((dl+total_DL_BW)/2,1));
+                        total_UP_BW     +=  bw_stringToInt(Math.round((up+total_UP_BW)/2,1));
+                        
+                        total_PC_DL_BW  = Math.round((total_PC_DL_BW + pb_old_bw_dl_pc) / 2, 1); 
+                        total_PC_UP_BW  = Math.round((total_PC_UP_BW + pb_old_bw_up_pc) / 2, 1); 
+                        
+                        pb_old_bw_dl_pc     = total_PC_DL_BW;
+                        pb_old_bw_up_pc     = total_PC_UP_BW;
+                        pb_old_bw_dl_val    = total_DL_BW;
+                        pb_old_bw_up_val    = total_UP_BW;
+                    } else
+                    
                     total_DL        +=  bw_stringToInt(dl);
                     total_UP        +=  bw_stringToInt(dl);
             });
@@ -274,6 +297,7 @@ $(document).ready(function () {
                 $("#dl_total_bw").text(convertByte(total_DL_BW)+"/s");
                 $("#up_total_bw").text(convertByte(total_UP_BW)+"/s");
                 
+            // Progress Bar
                 $("#pb_bw_dl").width(total_PC_DL_BW + "%");
                 $("#pb_bw_dl").text(total_PC_DL_BW + "%");
                 
