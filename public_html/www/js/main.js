@@ -42,9 +42,10 @@ $(document).ready(function () {
         } else {
             var tab = str.split(" ");
             if (tab[1] == "o/s") x = tab[0];
-            if (tab[1] == "Ko/s") x = tab[0]*1024;
-            if (tab[1] == "Mo/s") x = tab[0]*1048576;
-            if (tab[1] == "Go/s") x = tab[0]*1073741824;
+            else if (tab[1] == "Ko/s") x = tab[0]*1024;
+            else if (tab[1] == "Mo/s") x = tab[0]*1048576;
+            else if (tab[1] == "Go/s") x = tab[0]*1073741824;
+            else x = 0;
         }
         
         return parseInt(x);
@@ -54,10 +55,9 @@ $(document).ready(function () {
     jQuery.fn.dataTableExt.oSort['bandwidth-asc'] = function (a, b) {  
         var x = 0;
         var y = 0;
-        
+       
         x = bw_stringToInt(a);
         y = bw_stringToInt(b);
-        
         
         return ((x < y) ? -1 : ((x > y) ? 1 : 0));
     };
@@ -184,11 +184,17 @@ $(document).ready(function () {
             async: false,
             dataType: 'json',
             success: function (data) {
-                datas_qos = data.data.QOS;
-                datas_hosts = data.data.arp;
-                datas_bw = data.data.bandwidth;
+                datas_qos       = data.data.QOS;
+                datas_hosts     = data.data.arp;
+                datas_bw        = data.data.bandwidth;
                 datas_hostnames = data.data.leases;
-                //console.log(datas_hostnames["192.168.1.11"]);
+                
+                readHosts();
+                readQOS();
+                readBw();
+            },
+            error : function(resultat, statut, erreur){
+                console.log("Erreur lecture flux json");
             }
         });
 
@@ -208,14 +214,15 @@ $(document).ready(function () {
     
     function readQOS() {
         var val = datas_qos[0];
-        max_DL = val["QOS_DL"];
-        max_UP = val["QOS_UP"];
+        
+        // Protection division par 0 en cas d'erreur de lecture du flux json
+        //console.log(val);
+        if (val["QOS_DL"] > 0) max_DL = val["QOS_DL"];
+        if (val["QOS_UP"] > 0) max_UP = val["QOS_UP"];
     }
 
     function readBw() {
-        readData();
-        readHosts();
-        readQOS();
+        
 
         $.each(datas_bw, function (key, val) {
             var id_host = jQuery.inArray(val.SRC, myhosts);
@@ -270,6 +277,10 @@ $(document).ready(function () {
                         total_UP_BW     +=  bw_stringToInt(up);
                         total_PC_DL_BW  +=  Math.round(  (( ((val.DL - val.OLD_DL) / (val.CURRENT_TIME - val.PREV_TIME))/1204) / (max_DL / 8) * 100));
                         total_PC_UP_BW  +=  Math.round(  (( ((val.UP - val.OLD_UP) / (val.CURRENT_TIME - val.PREV_TIME))/1204) / (max_UP / 8) * 100));
+                        //console.log("***");
+                        //console.log(total_PC_DL_BW);
+                        //console.log(val.DL);
+                        //console.log(val.OLD_DL);
             });
             
             // Lissage
@@ -361,5 +372,5 @@ $(document).ready(function () {
     });
     
     readBw();  
-    setInterval(readBw, refresh);
+    setInterval(readData, refresh);
 });
