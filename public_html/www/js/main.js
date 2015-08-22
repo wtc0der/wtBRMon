@@ -6,10 +6,10 @@ $(document).ready(function () {
         var prefer_average = true;
         
         // Pour le lissage des progress bar
-            var pb_old_bw_dl_pc     = 0;
-            var pb_old_bw_up_pc     = 0;
-            var pb_old_bw_dl_val    = 0;
-            var pb_old_bw_up_val    = 0;
+            var pb_old_bw_dl_pc     = 1;
+            var pb_old_bw_up_pc     = 1;
+            var pb_old_bw_dl_val    = 1;
+            var pb_old_bw_up_val    = 1;
     
     var datas_qos = {};
     var datas_hosts = {};
@@ -270,8 +270,8 @@ $(document).ready(function () {
                 // Calcul des totaux
                     total_DL_BW     +=  bw_stringToInt(dl);
                     total_UP_BW     +=  bw_stringToInt(up);
-                    total_PC_DL_BW  +=  Math.round(  (( ((val.DL - val.OLD_DL) / (val.CURRENT_TIME - val.PREV_TIME))/1204) / (max_DL / 8) * 100),2);
-                    total_PC_UP_BW  +=  Math.round(  (( ((val.UP - val.OLD_UP) / (val.CURRENT_TIME - val.PREV_TIME))/1204) / (max_UP / 8) * 100),2);
+                    total_PC_DL_BW  +=  Math.round(  (( ((val.DL - val.OLD_DL) / (val.CURRENT_TIME - val.PREV_TIME))/1204) / (max_DL / 8) * 100));
+                    total_PC_UP_BW  +=  Math.round(  (( ((val.UP - val.OLD_UP) / (val.CURRENT_TIME - val.PREV_TIME))/1204) / (max_UP / 8) * 100));
                     
                    
                     
@@ -280,8 +280,8 @@ $(document).ready(function () {
                         total_DL_BW     +=  bw_stringToInt(Math.round((dl+total_DL_BW)/2,1));
                         total_UP_BW     +=  bw_stringToInt(Math.round((up+total_UP_BW)/2,1));
                         
-                        total_PC_DL_BW  = Math.round((total_PC_DL_BW + pb_old_bw_dl_pc) / 2, 1); 
-                        total_PC_UP_BW  = Math.round((total_PC_UP_BW + pb_old_bw_up_pc) / 2, 1); 
+                        total_PC_DL_BW  = Math.round((total_PC_DL_BW + pb_old_bw_dl_pc) / 2); 
+                        total_PC_UP_BW  = Math.round((total_PC_UP_BW + pb_old_bw_up_pc) / 2); 
                         
                         pb_old_bw_dl_pc     = total_PC_DL_BW;
                         pb_old_bw_up_pc     = total_PC_UP_BW;
