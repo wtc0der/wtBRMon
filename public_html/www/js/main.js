@@ -268,17 +268,11 @@ $(document).ready(function () {
                     curr_bw.push([hostname, val.IP, dl, up, pc_dl, pc_up, convertByte(val.DL), convertByte(val.UP)]);
                 
                 // Calcul des totaux
-                    total_DL_BW     +=  bw_stringToInt(dl);
-                    total_UP_BW     +=  bw_stringToInt(up);
-                    total_PC_DL_BW  +=  Math.round(  (( ((val.DL - val.OLD_DL) / (val.CURRENT_TIME - val.PREV_TIME))/1204) / (max_DL / 8) * 100));
-                    total_PC_UP_BW  +=  Math.round(  (( ((val.UP - val.OLD_UP) / (val.CURRENT_TIME - val.PREV_TIME))/1204) / (max_UP / 8) * 100));
-                    
-                   
-                    
+
                     // Lissage
                     if (prefer_average === true) {
-                        total_DL_BW     +=  bw_stringToInt(Math.round((dl+total_DL_BW)/2,1));
-                        total_UP_BW     +=  bw_stringToInt(Math.round((up+total_UP_BW)/2,1));
+                        total_DL_BW     +=  bw_stringToInt(Math.round((dl+pb_old_bw_dl_val)/2));
+                        total_UP_BW     +=  bw_stringToInt(Math.round((up+pb_old_bw_up_val)/2));
                         
                         total_PC_DL_BW  = Math.round((total_PC_DL_BW + pb_old_bw_dl_pc) / 2); 
                         total_PC_UP_BW  = Math.round((total_PC_UP_BW + pb_old_bw_up_pc) / 2); 
@@ -287,7 +281,12 @@ $(document).ready(function () {
                         pb_old_bw_up_pc     = total_PC_UP_BW;
                         pb_old_bw_dl_val    = total_DL_BW;
                         pb_old_bw_up_val    = total_UP_BW;
-                    } else
+                    } else {
+                        total_DL_BW     +=  bw_stringToInt(dl);
+                        total_UP_BW     +=  bw_stringToInt(up);
+                        total_PC_DL_BW  +=  Math.round(  (( ((val.DL - val.OLD_DL) / (val.CURRENT_TIME - val.PREV_TIME))/1204) / (max_DL / 8) * 100));
+                        total_PC_UP_BW  +=  Math.round(  (( ((val.UP - val.OLD_UP) / (val.CURRENT_TIME - val.PREV_TIME))/1204) / (max_UP / 8) * 100));
+                    }
                     
                     total_DL        +=  bw_stringToInt(dl);
                     total_UP        +=  bw_stringToInt(dl);
