@@ -2,7 +2,7 @@ $(document).ready(function () {
     // Limite couleurs progress bar
         var val_warning = 75;
         var val_danger  = 85;
-        var refresh = 1000;
+        var refresh = 5000;
         var prefer_average = true;
         
         // Pour le lissage des progress bar
@@ -194,7 +194,7 @@ $(document).ready(function () {
                 readBw();
             },
             error : function(resultat, statut, erreur){
-                console.log("Erreur lecture flux json");
+                //console.log("Erreur lecture flux json");
             }
         });
 
@@ -216,14 +216,13 @@ $(document).ready(function () {
         var val = datas_qos[0];
         
         // Protection division par 0 en cas d'erreur de lecture du flux json
-        //console.log(val);
         if (val["QOS_DL"] > 0) max_DL = val["QOS_DL"];
         if (val["QOS_UP"] > 0) max_UP = val["QOS_UP"];
     }
 
     function readBw() {
         
-
+        // Lecture de la liste des connexions, on incrémente le tableau bw
         $.each(datas_bw, function (key, val) {
             var id_host = jQuery.inArray(val.SRC, myhosts);
 
@@ -240,7 +239,7 @@ $(document).ready(function () {
                     bw[val.DST]["CON"]++;
                     bw[val.DST]["DL"] += val.BYTE;
                 } else {
-                    console.log("erreur : " + val.SRC + " - " + val.DST);
+                    //console.log("erreur : " + val.SRC + " - " + val.DST);
                 }
             }
         });
@@ -249,52 +248,56 @@ $(document).ready(function () {
             curr_bw = [];
             total_DL_BW     = 0;
             total_UP_BW     = 0;
-            total_DL        = 0;
-            total_UP        = 0;
             total_PC_DL_BW  = 0;
             total_PC_UP_BW  = 0;
             
+            // Pour chaque host :
             $.each(bw, function (key, val) {
-                var up = convertByte((val.UP - val.OLD_UP) / (val.CURRENT_TIME - val.PREV_TIME));
-                    if (up == 0) {up = "--";}
+                
+                // Calcul des données envoyées depuis le dernier appel
+                    var up = convertByte((val.UP - val.OLD_UP) / (val.CURRENT_TIME - val.PREV_TIME));
+                    if (up === 0) {up = "--";}
                     else {up += "/s";}
 
-                var dl = convertByte((val.DL - val.OLD_DL) / (val.CURRENT_TIME - val.PREV_TIME));
-                    if (dl == 0) {dl = "--";}
+                // Calcul des données reçues depuis le dernier appel
+                    var dl = convertByte((val.DL - val.OLD_DL) / (val.CURRENT_TIME - val.PREV_TIME));
+                    if (dl === 0) {dl = "--";}
                     else {dl += "/s";}
-
-                var pc_dl = Math.round(  (( ((val.DL - val.OLD_DL) / (val.CURRENT_TIME - val.PREV_TIME))/1204) / (max_DL / 8) * 100),2) + "%";
-                var pc_up = Math.round(  (( ((val.UP - val.OLD_UP) / (val.CURRENT_TIME - val.PREV_TIME))/1204) / (max_UP / 8) * 100),2) + "%";
                 
-                // On ajoute l'enregistrement dans la tableau de la datatable
+                // Calcul du pourcentage de bande passante utilisé en reception
+                    var val_pc_dl = Math.round(  (( ((val.DL - val.OLD_DL) / (val.CURRENT_TIME - val.PREV_TIME))/1204) / (max_DL / 8) * 100));
+                    var pc_dl = val_pc_dl + "%";
+
+                // Calcul du pourcentage de bande passante utilisé en emission
+                    var val_pc_up = Math.round(  (( ((val.UP - val.OLD_UP) / (val.CURRENT_TIME - val.PREV_TIME))/1204) / (max_UP / 8) * 100),2);
+                    var pc_up = val_pc_up + "%";
+                
+                // On rapproche le nom d'hote à l'adresse IP
                     var hostname = datas_hostnames[0][val.IP];
-                    if (hostname == undefined) hostname = "--";
-                    //console.log(hostname);
+                    if (hostname === undefined) hostname = "--";
+
+                // On ajoute l'enregistrement dans la tableau de la datatable
                     curr_bw.push([hostname, val.IP, dl, up, pc_dl, pc_up, convertByte(val.DL), convertByte(val.UP)]);
                 
-                // Calcul des totaux                   
-                        total_DL_BW     +=  bw_stringToInt(dl);
-                        total_UP_BW     +=  bw_stringToInt(up);
-                        total_PC_DL_BW  +=  Math.round(  (( ((val.DL - val.OLD_DL) / (val.CURRENT_TIME - val.PREV_TIME))/1204) / (max_DL / 8) * 100));
-                        total_PC_UP_BW  +=  Math.round(  (( ((val.UP - val.OLD_UP) / (val.CURRENT_TIME - val.PREV_TIME))/1204) / (max_UP / 8) * 100));
-                        //console.log("***");
-                        //console.log(total_PC_DL_BW);
-                        //console.log(val.DL);
-                        //console.log(val.OLD_DL);
+                // On incrémente les totaux                   
+                    total_DL_BW     +=  bw_stringToInt(dl);
+                    total_UP_BW     +=  bw_stringToInt(up);
+                    total_PC_DL_BW  +=  val_pc_dl;
+                    total_PC_UP_BW  +=  val_pc_up;
             });
             
-            // Lissage
+            // Lissage : moyenne sur les valeurs en cours et les précédentes
                 if (prefer_average === true) {
-                        total_DL_BW     =  Math.round((total_DL_BW+pb_old_bw_dl_val) / 2);
-                        total_UP_BW     =  Math.round((total_UP_BW+pb_old_bw_up_val) / 2);
-                        
-                        total_PC_DL_BW  = Math.round((total_PC_DL_BW + pb_old_bw_dl_pc) / 2); 
-                        total_PC_UP_BW  = Math.round((total_PC_UP_BW + pb_old_bw_up_pc) / 2); 
-                        
-                        pb_old_bw_dl_pc     = total_PC_DL_BW;
-                        pb_old_bw_up_pc     = total_PC_UP_BW;
-                        pb_old_bw_dl_val    = total_DL_BW;
-                        pb_old_bw_up_val    = total_UP_BW;
+                    total_DL_BW     =  Math.round((total_DL_BW + pb_old_bw_dl_val) / 2);
+                    total_UP_BW     =  Math.round((total_UP_BW + pb_old_bw_up_val) / 2);
+
+                    total_PC_DL_BW  = Math.round((total_PC_DL_BW + pb_old_bw_dl_pc) / 2); 
+                    total_PC_UP_BW  = Math.round((total_PC_UP_BW + pb_old_bw_up_pc) / 2); 
+
+                    pb_old_bw_dl_pc     = total_PC_DL_BW;
+                    pb_old_bw_up_pc     = total_PC_UP_BW;
+                    pb_old_bw_dl_val    = total_DL_BW;
+                    pb_old_bw_up_val    = total_UP_BW;
                 } 
             
 
@@ -302,7 +305,8 @@ $(document).ready(function () {
                 $("#dl_total_bw").text(convertByte(total_DL_BW)+"/s");
                 $("#up_total_bw").text(convertByte(total_UP_BW)+"/s");
                 
-            // Progress Bar
+            //-----------------------    
+            // Progress Bar Reception
                 $("#pb_bw_dl").width(total_PC_DL_BW + "%");
                 $("#pb_bw_dl").text(total_PC_DL_BW + "%");
                 
@@ -326,7 +330,9 @@ $(document).ready(function () {
                     $("#pb_bw_dl").addClass('progress-bar-danger');
                     
                 }
-                
+            
+            //-----------------------
+            // Progress Bar Emission
                 $("#pb_bw_up").width(total_PC_UP_BW+ "%");
                 $("#pb_bw_up").text(total_PC_UP_BW + "%");
                 
@@ -349,8 +355,8 @@ $(document).ready(function () {
                     $("#pb_bw_up").addClass('progress-bar-danger');
                     
                 }
-        //console.log(curr_bw);
-        // Mise à jour de la table
+
+        // Mise à jour de la datatable
             table.clear();
             table.rows.add(curr_bw);
             table.draw();
@@ -371,6 +377,6 @@ $(document).ready(function () {
         ]
     });
     
-    readBw();  
+    readData();  
     setInterval(readData, refresh);
 });
