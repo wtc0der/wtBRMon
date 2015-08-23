@@ -154,15 +154,15 @@ $(document).ready(function () {
         //num = num / 8;
 
         if (num > 1099511627776) {
-            num = Math.round((num / 1099511627776), 1) + " To";
+            num = roundNumber((num / 1099511627776), 3) + " To";
         } else if (num > 1073741824) {
-            num = Math.round((num / 1073741824), 1) + " Go";
+            num = roundNumber((num / 1073741824), 2) + " Go";
         } else if (num > 1048576) {
-            num = Math.round((num / 1048576), 1) + " Mo";
+            num = roundNumber((num / 1048576), 2) + " Mo";
         } else if (num > 1024) {
-            num = Math.round((num / 1024), 1) + " Ko";
+            num = roundNumber((num / 1024), 1) + " Ko";
         } else if (num > 0) {
-            num = Math.round(num, 1) + " o";
+            num = Math.round(num) + " o";
         } else {
             num = "0";
         }
@@ -216,8 +216,9 @@ $(document).ready(function () {
         var val = datas_qos[0];
         
         // Protection division par 0 en cas d'erreur de lecture du flux json
-        if (val["QOS_DL"] > 0) max_DL = val["QOS_DL"];
-        if (val["QOS_UP"] > 0) max_UP = val["QOS_UP"];
+        if (val["QOS_DL"] > 0) max_DL = roundNumber(val["QOS_DL"] / 8 * 1024, 2);
+        if (val["QOS_UP"] > 0) max_UP = roundNumber(val["QOS_UP"] / 8 * 1024, 2);
+        //console.log(max_DL);
     }
 
     function readBw() {
@@ -265,11 +266,11 @@ $(document).ready(function () {
                     else {dl += "/s";}
                 
                 // Calcul du pourcentage de bande passante utilisé en reception
-                    var val_pc_dl = Math.round(  (( ((val.DL - val.OLD_DL) / (val.CURRENT_TIME - val.PREV_TIME))/1204) / (max_DL / 8) * 100));
+                    var val_pc_dl = roundNumber(  (( ((val.DL - val.OLD_DL) / (val.CURRENT_TIME - val.PREV_TIME))) / (max_DL) * 100),2);
                     var pc_dl = val_pc_dl + "%";
 
                 // Calcul du pourcentage de bande passante utilisé en emission
-                    var val_pc_up = Math.round(  (( ((val.UP - val.OLD_UP) / (val.CURRENT_TIME - val.PREV_TIME))/1204) / (max_UP / 8) * 100),2);
+                    var val_pc_up = roundNumber(  (( ((val.UP - val.OLD_UP) / (val.CURRENT_TIME - val.PREV_TIME))) / (max_UP) * 100),2);
                     var pc_up = val_pc_up + "%";
                 
                 // On rapproche le nom d'hote à l'adresse IP
@@ -288,11 +289,11 @@ $(document).ready(function () {
             
             // Lissage : moyenne sur les valeurs en cours et les précédentes
                 if (prefer_average === true) {
-                    total_DL_BW     =  Math.round((total_DL_BW + pb_old_bw_dl_val) / 2);
-                    total_UP_BW     =  Math.round((total_UP_BW + pb_old_bw_up_val) / 2);
+                    total_DL_BW     =  roundNumber((total_DL_BW + pb_old_bw_dl_val) / 2,2);
+                    total_UP_BW     =  roundNumber((total_UP_BW + pb_old_bw_up_val) / 2,2);
 
-                    total_PC_DL_BW  = Math.round((total_PC_DL_BW + pb_old_bw_dl_pc) / 2); 
-                    total_PC_UP_BW  = Math.round((total_PC_UP_BW + pb_old_bw_up_pc) / 2); 
+                    total_PC_DL_BW  = roundNumber((total_PC_DL_BW + pb_old_bw_dl_pc) / 2,1); 
+                    total_PC_UP_BW  = roundNumber((total_PC_UP_BW + pb_old_bw_up_pc) / 2,1); 
 
                     pb_old_bw_dl_pc     = total_PC_DL_BW;
                     pb_old_bw_up_pc     = total_PC_UP_BW;
@@ -302,8 +303,9 @@ $(document).ready(function () {
             
 
             // Mise à jour de la page
-                $("#dl_total_bw").text(convertByte(total_DL_BW)+"/s");
-                $("#up_total_bw").text(convertByte(total_UP_BW)+"/s");
+                
+                $("#dl_total_bw").text(convertByte(total_DL_BW) + "/s");
+                $("#up_total_bw").text(convertByte(total_UP_BW) + "/s");
                 
             //-----------------------    
             // Progress Bar Reception
